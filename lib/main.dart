@@ -12,10 +12,31 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String? _selectedUser;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: UsersView(),
+      home: Navigator(
+        pages: [
+          MaterialPage(
+            child: UsersView(
+              didSelectUser: (user) {
+                setState(() => _selectedUser = user);
+              },
+            ),
+          ),
+          if (_selectedUser != null)
+            MaterialPage(child: UserDetailsView(user: _selectedUser!))
+        ],
+        onPopPage: (route, result) {
+          final page = route.settings as MaterialPage;
+          if (page.key == UserDetailsView.valueKey) {
+            _selectedUser = null;
+          }
+          return route.didPop(result);
+        },
+      ),
     );
   }
 }
@@ -32,7 +53,9 @@ class UsersView extends StatelessWidget {
     "Andersine"
   ];
 
-  UsersView({Key? key}) : super(key: key);
+  final ValueChanged didSelectUser;
+
+  UsersView({Key? key, required this.didSelectUser}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +70,7 @@ class UsersView extends StatelessWidget {
             return Card(
                 child: ListTile(
               title: Text(user),
+              onTap: () => didSelectUser(user),
             ));
           }),
     );
@@ -54,6 +78,8 @@ class UsersView extends StatelessWidget {
 }
 
 class UserDetailsView extends StatelessWidget {
+  static const valueKey = ValueKey('UserDetailsView');
+
   final String user;
 
   const UserDetailsView({Key? key, required this.user}) : super(key: key);
